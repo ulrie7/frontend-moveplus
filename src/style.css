@@ -1,0 +1,148 @@
+@import 'tailwindcss';
+
+html,
+body,
+#app {
+  font-family: 'Century Gothic', 'Futura', 'Gill Sans', 'Arial', sans-serif;
+}
+
+/* Pour que le background prenne tout l'écran sur la page de login */
+.container-login {
+  /* min-height: 100vh;
+  min-width: 100vw; */
+  height: 100vh;
+  width: 100vw;
+}
+.material-symbols-outlined {
+  font-variation-settings:
+    'FILL' 0,
+    'wght' 400,
+    'GRAD' 0,
+    'opsz' 24;
+  transition: font-variation-settings 120ms ease;
+}
+button:active .material-symbols-outlined,
+a:active .material-symbols-outlined,
+.nav-link.active-nav-link .material-symbols-outlined {
+  font-variation-settings:
+    'FILL' 1,
+    'wght' 400,
+    'GRAD' 0,
+    'opsz' 24;
+}
+
+.notification {
+  position: fixed;
+  top: 24px;
+  right: 24px;
+  z-index: 1000;
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  width: min(380px, calc(100vw - 32px));
+  padding: 16px;
+  color: #1f2937;
+  background: #ffffff;
+  border-left: 4px solid #6b7280;
+  border-radius: 8px;
+  box-shadow: 0 10px 25px rgb(15 23 42 / 15%);
+  opacity: 0;
+  transform: translateX(24px);
+  transition:
+    opacity 0.2s ease,
+    transform 0.2s ease;
+}
+
+.notification-success {
+  border-left-color: #16a34a;
+}
+
+.notification-error {
+  border-left-color: #dc2626;
+}
+
+.notification-warning {
+  border-left-color: #d97706;
+}
+
+.notification-info {
+  border-left-color: #2563eb;
+}
+
+.notification-icon {
+  display: grid;
+  flex: 0 0 24px;
+  width: 24px;
+  height: 24px;
+  place-items: center;
+  font-weight: 700;
+  color: #ffffff;
+  background: #6b7280;
+  border-radius: 50%;
+}
+
+.notification-success .notification-icon {
+  background: #16a34a;
+}
+
+.notification-error .notification-icon {
+  background: #dc2626;
+}
+
+.notification-warning .notification-icon {
+  background: #d97706;
+}
+
+.notification-info .notification-icon {
+  background: #2563eb;
+}
+
+.notification-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.notification-title {
+  font-weight: 700;
+}
+
+.notification-message {
+  margin-top: 4px;
+  font-size: 0.875rem;
+  line-height: 1.4;
+  color: #4b5563;
+  overflow-wrap: anywhere;
+}
+
+.notification-close {
+  flex: 0 0 auto;
+  padding: 0 4px;
+  font-size: 1.25rem;
+  line-height: 1;
+  color: #6b7280;
+  cursor: pointer;
+  background: transparent;
+  border: 0;
+}
+
+.notification-close:hover {
+  color: #111827;
+}
+
+@keyframes fadeOut {
+  from {
+    opacity: 1;
+    transform: translateX(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateX(24px);
+  }
+}
+
+@media (max-width: 640px) {
+  .notification {
+    top: 16px;
+    right: 16px;
+  }
+}

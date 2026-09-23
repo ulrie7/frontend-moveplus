@@ -45,7 +45,9 @@
           <div class="chart-card">
             <div class="chart-card-header">
               <h4>{{ config.primaryChart.title }}</h4>
-              <span class="legend-note" v-if="config.primaryChart.note">{{ config.primaryChart.note }}</span>
+              <span class="legend-note" v-if="config.primaryChart.note">{{
+                config.primaryChart.note
+              }}</span>
             </div>
             <div class="chart-canvas-wrap">
               <canvas ref="primaryCanvas"></canvas>
@@ -81,7 +83,9 @@
               <tbody>
                 <tr v-for="(row, i) in config.table.rows" :key="i">
                   <td v-for="(cell, j) in row" :key="j">
-                    <span v-if="isBadge(cell)" class="badge" :style="badgeStyle(cell)">{{ cell.text }}</span>
+                    <span v-if="isBadge(cell)" class="badge" :style="badgeStyle(cell)">{{
+                      cell.text
+                    }}</span>
                     <span v-else>{{ cell }}</span>
                   </td>
                 </tr>
@@ -173,7 +177,7 @@ export default {
             ],
           },
           table: {
-            title: "Historique des excès de vitesse",
+            title: 'Historique des excès de vitesse',
             columns: ['Heure', 'Vitesse', 'Limite', 'Lieu'],
             rows: [
               ['10:42', '95 km/h', '90 km/h', 'Route de Ouidah'],
@@ -202,7 +206,11 @@ export default {
             labels: ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'],
             datasets: [
               { label: 'Freinages brusques', data: [2, 1, 0, 1, 2, 0, 0], backgroundColor: RED },
-              { label: 'Accélérations brusques', data: [1, 0, 1, 1, 0, 1, 0], backgroundColor: ORANGE },
+              {
+                label: 'Accélérations brusques',
+                data: [1, 0, 1, 1, 0, 1, 0],
+                backgroundColor: ORANGE,
+              },
               { label: 'Virages serrés', data: [0, 1, 1, 0, 1, 0, 0], backgroundColor: BLUE },
             ],
           },
@@ -328,7 +336,12 @@ export default {
           subtitle: 'Consommation par jour',
           period: 'Cette semaine',
           stats: [
-            { icon: 'local_gas_station', label: 'Conso. moyenne', value: '8.2 L/100km', color: BLUE },
+            {
+              icon: 'local_gas_station',
+              label: 'Conso. moyenne',
+              value: '8.2 L/100km',
+              color: BLUE,
+            },
             { icon: 'water_drop', label: 'Total consommé', value: '42 L', color: ORANGE },
             { icon: 'payments', label: 'Coût estimé', value: '32 130 FCFA', color: GREEN },
           ],
@@ -363,7 +376,7 @@ export default {
             { icon: 'info', label: 'Faibles', value: '5', color: GREEN },
           ],
           primaryChart: {
-            title: "Alertes par jour",
+            title: 'Alertes par jour',
             type: 'bar',
             labels: ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'],
             datasets: [{ label: 'Alertes', data: [1, 3, 2, 0, 4, 1, 3], backgroundColor: BLUE }],
@@ -441,6 +454,7 @@ export default {
           options: {
             responsive: true,
             maintainAspectRatio: false,
+            animation: false,
             interaction: { mode: 'index', intersect: false },
             plugins: {
               legend: {
@@ -469,6 +483,7 @@ export default {
           options: {
             responsive: true,
             maintainAspectRatio: false,
+            animation: false,
             cutout: '72%',
             plugins: {
               legend: {

@@ -15,12 +15,21 @@
       <!-- Zone de contenu -->
       <div class="h-full w-[94%] relative overflow-hidden">
         <router-view v-slot="{ Component }" class="relative z-10">
-          <component :is="Component" class="relative z-10" :active-report="selectedReport" @select-report="onSelectReport" />
+          <component
+            :is="Component"
+            class="relative z-10"
+            :active-report="selectedReport"
+            :coords="coords"
+            @select-report="onSelectReport"
+            @map-slot-ready="setMapContainer"
+            @reset-map="resetView"
+          />
         </router-view>
 
         <!-- 🗺️ Carte Leaflet en fond -->
         <div
-          ref="mapContainer"
+          ref="mapHost"
+          v-if="$route.name !== 'Dashboard'"
           class="absolute inset-0 z-0 transition-opacity duration-300"
           :class="{ 'opacity-0 pointer-events-none': isMapHidden, 'opacity-100': !isMapHidden }"
         />
@@ -34,7 +43,12 @@
 
         <!-- Badge coordonnées -->
         <div
-          v-show="!isMapHidden && $route.name !== 'Vehicles' && $route.name !== 'Report'"
+          v-show="
+            !isMapHidden &&
+            $route.name !== 'Dashboard' &&
+            $route.name !== 'Vehicles' &&
+            $route.name !== 'Report'
+          "
           class="absolute top-3 left-3 z-[1000] bg-[#081228]/80 backdrop-blur-sm text-white text-xs font-mono px-3 py-1.5 rounded-lg border border-white/10 shadow pointer-events-none"
         >
           📍 {{ coords.lat }} / {{ coords.lng }} — zoom {{ coords.zoom }}
@@ -42,7 +56,7 @@
 
         <!-- Bouton recentrer -->
         <button
-          v-show="!isMapHidden && !selectedReport"
+          v-show="!isMapHidden && $route.name !== 'Dashboard' && !selectedReport"
           @click="resetView"
           class="absolute bottom-4 right-4 z-[1000] bg-[#0E6A97] hover:bg-[#0b567c] text-white text-xs font-semibold px-4 py-2 rounded-full shadow-lg transition-all duration-200 active:scale-95"
         >
@@ -83,12 +97,14 @@ export default {
   data() {
     return {
       map: null,
+      mapElement: null,
       coords: {
         lat: DEFAULT_LAT.toFixed(4),
         lng: DEFAULT_LNG.toFixed(4),
         zoom: DEFAULT_ZOOM,
       },
       selectedReport: null,
+      dashboardMapContainer: null,
     }
   },
 
@@ -98,39 +114,12 @@ export default {
       if (name !== 'Report') {
         this.selectedReport = null
       }
+      this.$nextTick(() => this.initializeMap())
     },
   },
 
   mounted() {
-    this.$nextTick(() => {
-      this.map = L.map(this.$refs.mapContainer, {
-        center: [DEFAULT_LAT, DEFAULT_LNG],
-        zoom: DEFAULT_ZOOM,
-        zoomControl: false,
-      })
-
-      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
-        maxZoom: 19,
-      }).addTo(this.map)
-
-      // déplacer le contrôle de zoom par défaut vers la droite
-      L.control.zoom({ position: 'topright' }).addTo(this.map)
-
-      L.marker([DEFAULT_LAT, DEFAULT_LNG])
-        .addTo(this.map)
-        .bindPopup('<b>📍 Cotonou, Bénin</b>')
-        .openPopup()
-
-      this.map.on('moveend zoomend', () => {
-        const c = this.map.getCenter()
-        this.coords = {
-          lat: c.lat.toFixed(4),
-          lng: c.lng.toFixed(4),
-          zoom: this.map.getZoom(),
-        }
-      })
-    })
+    this.$nextTick(() => this.initializeMap())
   },
 
   beforeUnmount() {
@@ -141,17 +130,63 @@ export default {
   },
 
   computed: {
-    isDashboard() {
-      return this.$route.name === 'Dashboard'
-    },
     isMapHidden() {
-      return this.isDashboard || this.$route.name === 'Alert'
+      return this.$route.name === 'Alert'
     },
   },
 
   methods: {
+    setMapContainer(container) {
+      this.dashboardMapContainer = container
+      this.$nextTick(() => this.initializeMap())
+    },
+
+    initializeMap() {
+      const host = this.$refs.mapHost || this.dashboardMapContainer
+      if (!host) return
+
+      if (this.map) {
+        if (this.mapElement.parentElement !== host) {
+          host.appendChild(this.mapElement)
+          this.map.invalidateSize()
+        }
+        return
+      }
+
+      this.mapElement = document.createElement('div')
+      this.mapElement.className = 'absolute inset-0'
+      host.appendChild(this.mapElement)
+
+      this.map = L.map(this.mapElement, {
+        center: [DEFAULT_LAT, DEFAULT_LNG],
+        zoom: DEFAULT_ZOOM,
+        zoomControl: false,
+      })
+
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+        maxZoom: 19,
+      }).addTo(this.map)
+
+      L.control.zoom({ position: 'topright' }).addTo(this.map)
+
+      L.marker([DEFAULT_LAT, DEFAULT_LNG])
+        .addTo(this.map)
+        .bindPopup('<b>📍 Cotonou, Bénin</b>')
+        .openPopup()
+
+      this.map.on('moveend zoomend', () => {
+        const center = this.map.getCenter()
+        this.coords = {
+          lat: center.lat.toFixed(4),
+          lng: center.lng.toFixed(4),
+          zoom: this.map.getZoom(),
+        }
+      })
+    },
+
     resetView() {
-      this.map.setView([DEFAULT_LAT, DEFAULT_LNG], DEFAULT_ZOOM)
+      if (this.map) this.map.setView([DEFAULT_LAT, DEFAULT_LNG], DEFAULT_ZOOM)
     },
 
     onSelectReport(report) {

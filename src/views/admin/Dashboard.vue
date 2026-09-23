@@ -1,18 +1,16 @@
 <template>
-  <div class="container-dashboard h-full w-full bg-[#E8E7E7] flex  justify-center items-center ">
-    <div class="h-[95%] w-[95%] flex flex-col justify-between ">
+  <div class="container-dashboard h-full w-full bg-[#E8E7E7] flex justify-center items-center">
+    <div class="h-[95%] w-[95%] flex flex-col justify-between">
       <div class="h-[8%] w-[97%] bg-[white] flex items-center ml-4 rounded-lg">
-        <div
-          class="h-[80%] w-[15%] flex justify-center items-center rounded-lg"
-        >
+        <div class="h-[80%] w-[15%] flex justify-center items-center rounded-lg">
           <div class="icon h-[100%] w-[20%] flex justify-center items-center">
             <span class="material-symbols-outlined"> dashboard </span>
           </div>
-          <div class="text h-[100%] w-[80%]  flex justify-start items-center">
+          <div class="text h-[100%] w-[80%] flex justify-start items-center">
             <span class="font-semibold text-[20px]">Dashboard</span>
           </div>
         </div>
-      </div> 
+      </div>
       <div class="h-[17%] w-[100%] flex justify-between gap-4 px-4">
         <div class="h-[100%] w-[22%] bg-[green] rounded-lg shadow-sm">
           <div
@@ -30,7 +28,7 @@
           <div
             class="h-[35%] w-[100%] bg-[#219ebc] flex justify-center items-center rounded-t-lg text-white font-semibold"
           >
-            EN MOUVEMENT 
+            EN MOUVEMENT
           </div>
           <div
             class="h-[65%] w-[100%] bg-[white] flex justify-center items-center text-2xl font-bold rounded-b-lg"
@@ -64,16 +62,11 @@
         </div>
       </div>
 
-      <div class="h-[65%] w-[100%]  flex items-stretch justify-between gap-4 px-4 pb-4">
-        <div
-          class="relative h-full min-h-0 w-[48%] rounded-[8px] overflow-hidden shadow-lg "
-        >
-          <router-view
-            class="relative z-[10] flex h-full flex-col justify-center items-center p-4"
-          />
+      <div class="h-[65%] w-[100%] flex items-stretch justify-between gap-4 px-4 pb-4">
+        <div class="relative h-full min-h-0 w-[48%] rounded-[8px] overflow-hidden shadow-lg">
           <div
             ref="mapContainer"
-            class="absolute inset-0 z-0 transition-opacity duration-300"
+            class="relative h-full w-full z-0 transition-opacity duration-300"
           ></div>
 
           <div
@@ -83,7 +76,7 @@
           </div>
 
           <button
-            @click="resetView"
+            @click="$emit('reset-map')"
             class="absolute bottom-4 right-4 z-[1000] bg-[#0E6A97] hover:bg-[#0b567c] text-white text-xs font-semibold px-4 py-2 rounded-full shadow-lg transition-all duration-200 active:scale-95"
           >
             ⌖ Recentrer
@@ -166,35 +159,18 @@
 </template>
 
 <script>
-import L from 'leaflet'
-import 'leaflet/dist/leaflet.css'
-
-import markerIcon2x from 'leaflet/dist/images/marker-icon-2x.png'
-import markerIcon from 'leaflet/dist/images/marker-icon.png'
-import markerShadow from 'leaflet/dist/images/marker-shadow.png'
-
-delete L.Icon.Default.prototype._getIconUrl
-L.Icon.Default.mergeOptions({
-  iconRetinaUrl: markerIcon2x,
-  iconUrl: markerIcon,
-  shadowUrl: markerShadow,
-})
-
-const DEFAULT_LAT = 6.3654
-const DEFAULT_LNG = 2.4183
-const DEFAULT_ZOOM = 13
-
 export default {
   name: 'Dashboard',
 
+  props: {
+    coords: {
+      type: Object,
+      required: true,
+    },
+  },
+
   data() {
     return {
-      map: null,
-      coords: {
-        lat: DEFAULT_LAT.toFixed(4),
-        lng: DEFAULT_LNG.toFixed(4),
-        zoom: DEFAULT_ZOOM,
-      },
       vehicles: [
         { id: 'A01', name: 'Renault Kangoo', status: 'EN LIGNE', battery: 84, speed: 56 },
         { id: 'B12', name: 'Peugeot 3008', status: 'EN LIGNE', battery: 62, speed: 44 },
@@ -205,49 +181,7 @@ export default {
   },
 
   mounted() {
-    this.$nextTick(() => {
-      this.map = L.map(this.$refs.mapContainer, {
-        center: [DEFAULT_LAT, DEFAULT_LNG],
-        zoom: DEFAULT_ZOOM,
-        zoomControl: false,
-      })
-
-      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
-        maxZoom: 19,
-      }).addTo(this.map)
-
-      L.control.zoom({ position: 'topright' }).addTo(this.map)
-
-      L.marker([DEFAULT_LAT, DEFAULT_LNG])
-        .addTo(this.map)
-        .bindPopup('<b>📍 Cotonou, Bénin</b>')
-        .openPopup()
-
-      this.map.on('moveend zoomend', () => {
-        const center = this.map.getCenter()
-        this.coords = {
-          lat: center.lat.toFixed(4),
-          lng: center.lng.toFixed(4),
-          zoom: this.map.getZoom(),
-        }
-      })
-    })
-  },
-
-  beforeUnmount() {
-    if (this.map) {
-      this.map.remove()
-      this.map = null
-    }
-  },
-
-  methods: {
-    resetView() {
-      if (this.map) {
-        this.map.setView([DEFAULT_LAT, DEFAULT_LNG], DEFAULT_ZOOM)
-      }
-    },
+    this.$emit('map-slot-ready', this.$refs.mapContainer)
   },
 }
 </script>
@@ -258,10 +192,9 @@ export default {
 }
 .material-symbols-outlined {
   font-variation-settings:
-  'FILL' 1,
-  'wght' 400,
-  'GRAD' 0,
-  'opsz' 24
+    'FILL' 1,
+    'wght' 400,
+    'GRAD' 0,
+    'opsz' 24;
 }
-
 </style>

@@ -116,7 +116,7 @@
               :class="{ 'sub-item-active': activeReport === 'Ravitaillements' }"
               @click="selectReport('Ravitaillements')"
             >
-              <span class="material-symbols-outlined text-[#0E6A97] text-[14px]"> water_drop </span>
+              <span class="sub-item-icon material-symbols-outlined text-[14px]"> water_drop </span>
               Ravitaillements
             </button>
 
@@ -125,7 +125,7 @@
               :class="{ 'sub-item-active': activeReport === 'Compteur carburant' }"
               @click="selectReport('Compteur carburant')"
             >
-              <span class="material-symbols-outlined text-[#0E6A97] text-[14px]"> speed </span>
+              <span class="sub-item-icon material-symbols-outlined text-[14px]"> speed </span>
               Compteur carburant
             </button>
 
@@ -134,7 +134,7 @@
               :class="{ 'sub-item-active': activeReport === 'Consommation quotidienne' }"
               @click="selectReport('Consommation quotidienne')"
             >
-              <span class="material-symbols-outlined text-[#0E6A97] text-[14px]"> monitoring </span>
+              <span class="sub-item-icon material-symbols-outlined text-[14px]"> monitoring </span>
               Consommation quotidienne
             </button>
           </div>
@@ -280,10 +280,22 @@ export default {
   color: #0e6a97;
 }
 
+.sub-item-icon {
+  color: #5a5a5a;
+}
+
+.sub-item:hover .sub-item-icon {
+  color: #0e6a97;
+}
+
 .sub-item-active {
   background: #eef8fc;
   color: #0e6a97;
   font-weight: 600;
+}
+
+.sub-item-active .sub-item-icon {
+  color: #0e6a97;
 }
 
 /* Animation */

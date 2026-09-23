@@ -87,13 +87,13 @@
           <li
             v-for="(savedVehicle, index) in filteredVehicles"
             :key="`${savedVehicle.immatriculation}-${index}`"
-            class="vehicle-card w-full bg-gray-200 border border-gray-300 rounded-lg px-4 py-3 flex items-start justify-between gap-3 cursor-pointer"
+            class="vehicle-card min-h-[10%] w-full bg-gray-100 border border-gray-300 rounded-lg px-4 py-3 flex items-center justify-between gap-3 cursor-pointer"
             @click="openVehicleActions(savedVehicle)"
           >
             <!-- Icône + nom + sous-titre date/heure -->
-            <div class="flex items-start gap-3 min-w-0">
+            <div class="flex w-[72%] min-w-0 items-center gap-[4%]">
               <div
-                class="vehicle-icon-avatar"
+                class="vehicle-icon-avatar aspect-square h-auto w-[12%]"
                 :class="
                   savedVehicle.status === 'online'
                     ? 'vehicle-icon-avatar-online'
@@ -103,37 +103,28 @@
                 <span class="material-symbols-outlined">directions_car</span>
               </div>
 
-              <div class="min-w-0 pt-0.5">
-                <p class="font-semibold text-gray-900 text-sm truncate">
+              <div class="min-w-0 flex-1 pt-0.5">
+                <p class="truncate text-sm font-semibold leading-5 text-gray-900">
                   {{
                     savedVehicle.name ||
                     `${savedVehicle.brand || 'Marque inconnue'} ${savedVehicle.modele || 'Modèle inconnu'}`
                   }}
                 </p>
-                <p class="text-xs text-gray-400 truncate">
+                <p class="truncate text-xs leading-4 text-gray-400">
                   {{ savedVehicle.lastUpdate ? formatDate(savedVehicle.lastUpdate) : '--' }} /
                   {{ savedVehicle.lastUpdate ? formatTime(savedVehicle.lastUpdate) : '--' }}
                 </p>
               </div>
             </div>
 
-            <!-- Triangle d'alerte + badge de statut façon "TRIP" -->
-            <div class="flex flex-col items-center justify-center gap-1.5 flex-shrink-0">
-              <span
-                v-if="savedVehicle.hasWarning"
-                class="material-symbols-outlined text-amber-500 text-[16px] leading-none"
-                title="Alerte sur ce véhicule"
-              >
-                warning
-              </span>
-
+            <!-- Action de connexion -->
+            <div class="flex h-[80%] w-[24%] flex-shrink-0 items-center justify-center">
               <button
                 type="button"
-                class="trip-pill"
-                title="Recentrer la carte sur ce véhicule"
-                @click.stop="recenterOnVehicle(savedVehicle)"
+                class="connect-pill h-[80%] w-full"
+                title="Connecter ce véhicule"
               >
-                TRIP
+                CONNECT
               </button>
             </div>
           </li>
@@ -860,11 +851,6 @@ export default {
       })
     },
 
-    recenterOnVehicle(savedVehicle) {
-      // Émet l'événement vers le composant parent (ex: la carte) pour recentrer sur ce véhicule
-      this.$emit('recenter-vehicle', savedVehicle)
-    },
-
     // ===== Popup détails (modifier / supprimer) =====
 
     openVehicleActions(savedVehicle) {
@@ -884,9 +870,12 @@ export default {
         }
 
         this.$emit('vehicle-deleted', { ...this.selectedVehicle })
+
+        this.$notify.success('Véhicule supprimé', 'Le véhicule a été supprimé avec succès.')
         this.closeActionModal()
       } catch (error) {
         console.error('Erreur de suppression :', error)
+        this.$notify.error('Erreur', 'Impossible de supprimer le véhicule. Veuillez réessayer.')
       }
     },
   },
@@ -942,12 +931,10 @@ export default {
 }
 
 .vehicle-icon-avatar {
-  width: 34px;
-  height: 34px;
   border-radius: 9999px;
   border: 2px solid transparent;
   background-color: transparent;
-  color: #ffffff;
+  color: #000000;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -968,7 +955,7 @@ export default {
   border-color: #dc2626;
 }
 
-.trip-pill {
+.connect-pill {
   font-size: 10px;
   font-weight: 700;
   letter-spacing: 0.02em;
@@ -981,7 +968,7 @@ export default {
   transition: background-color 0.15s ease;
 }
 
-.trip-pill:hover {
+.connect-pill:hover {
   background-color: #454545;
 }
 </style>

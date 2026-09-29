@@ -76,7 +76,9 @@
                     <button
                       type="button"
                       class="mr-2 text-gray-400 hover:text-gray-600 cursor-pointer"
-                      :aria-label="showPassword ? 'Masquer le mot de passe' : 'Afficher le mot de passe'"
+                      :aria-label="
+                        showPassword ? 'Masquer le mot de passe' : 'Afficher le mot de passe'
+                      "
                       :title="showPassword ? 'Masquer le mot de passe' : 'Afficher le mot de passe'"
                       @click="showPassword = !showPassword"
                     >
@@ -169,6 +171,70 @@
         </div>
       </div>
     </div>
+
+    <div
+      v-if="showVerificationDialog"
+      class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4"
+      role="presentation"
+    >
+      <section
+        class="w-full max-w-md rounded-lg bg-white p-6 shadow-2xl"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="verification-title"
+      >
+        <h2 id="verification-title" class="text-xl font-semibold text-gray-900">
+          Vérifiez votre compte
+        </h2>
+        <p class="mt-2 text-sm text-gray-600">
+          Un code de vérification a été envoyé à <strong>{{ verificationEmail }}</strong
+          >. Saisissez-le pour activer votre compte.
+        </p>
+
+        <form class="mt-5" @submit.prevent="verifyAccount">
+          <label for="verification-code" class="block text-sm font-medium text-gray-700">
+            Code de vérification
+          </label>
+          <input
+            id="verification-code"
+            v-model.trim="verificationCode"
+            type="text"
+            inputmode="numeric"
+            autocomplete="one-time-code"
+            required
+            class="mt-1 h-12 w-full rounded border border-gray-300 px-3 focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-200"
+            :aria-invalid="Boolean(verificationError)"
+            aria-describedby="verification-error"
+          />
+
+          <p
+            v-if="verificationError"
+            id="verification-error"
+            class="mt-2 text-sm text-red-600"
+            role="alert"
+          >
+            {{ verificationError }}
+          </p>
+
+          <button
+            type="submit"
+            :disabled="isVerifying || !verificationCode"
+            class="mt-5 w-full rounded bg-[#1A67C1] py-2 font-semibold text-white transition-colors hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            {{ isVerifying ? 'Vérification...' : 'Vérifier' }}
+          </button>
+        </form>
+
+        <button
+          type="button"
+          :disabled="isResending"
+          class="mt-4 w-full text-sm font-medium text-blue-700 hover:underline disabled:cursor-not-allowed disabled:opacity-60"
+          @click="resendVerificationCode"
+        >
+          {{ isResending ? 'Envoi en cours...' : 'Renvoyer le code' }}
+        </button>
+      </section>
+    </div>
   </div>
 </template>
 
@@ -184,11 +250,17 @@ export default {
       firstName: '',
       lastName: '',
       email: '',
+      verificationEmail: '',
       password: '',
       showPassword: false,
       rememberMe: false,
       isExiting: false, // 👈 Animation de sortie
       isEntering: false, // 👈 Animation d'entrée
+      showVerificationDialog: false,
+      verificationCode: '',
+      verificationError: '',
+      isVerifying: false,
+      isResending: false,
     }
   },
   methods: {
@@ -258,34 +330,79 @@ export default {
         // Redirection après connexion
         this.$notify.success('Connexion réussie', 'Bienvenue sur Move+')
         this.$router.push({ name: 'Layout' })
-        
       } catch (error) {
         this.$notify.error(
           'Erreur de connexion',
-          this.getAuthErrorMessage(
-            error,
-            'Vérifiez votre adresse e-mail et votre mot de passe.',
-          ),
+          this.getAuthErrorMessage(error, 'Vérifiez votre adresse e-mail et votre mot de passe.'),
           { duration: 3000 },
         )
       }
     },
     async register() {
       try {
-        const response = await axios.post(`${import.meta.env.VITE_API_URL}/api/v1/admin`, {
+        await axios.post(`${import.meta.env.VITE_API_URL}/api/v1/admin`, {
           firstName: this.firstName,
           lastName: this.lastName,
           email: this.email,
           password: this.password,
           roles: ['admin'],
         })
-        this.$notify.success('Inscription réussie', 'Votre compte a été créé.')
+        this.verificationEmail = this.email
+        this.firstName = ''
+        this.lastName = ''
+        this.email = ''
+        this.password = ''
+        this.showPassword = false
+        this.verificationCode = ''
+        this.verificationError = ''
+        this.showVerificationDialog = true
       } catch (error) {
         this.$notify.error(
           "Erreur d'inscription",
           this.getAuthErrorMessage(error, 'Impossible de créer votre compte pour le moment.'),
           { duration: 3000 },
         )
+      }
+    },
+    async verifyAccount() {
+      this.isVerifying = true
+      this.verificationError = ''
+
+      try {
+        await axios.post(`${import.meta.env.VITE_API_URL}/api/v1/admin/auth/verify-account`, {
+          email: this.verificationEmail,
+          code: this.verificationCode,
+        })
+        this.showVerificationDialog = false
+        this.direction = false
+        this.verificationEmail = ''
+        this.$notify.success('Compte vérifié', 'Vous pouvez maintenant vous connecter.')
+      } catch (error) {
+        this.verificationError = this.getAuthErrorMessage(
+          error,
+          'Code incorrect ou expiré. Vérifiez-le puis réessayez.',
+        )
+      } finally {
+        this.isVerifying = false
+      }
+    },
+    async resendVerificationCode() {
+      this.isResending = true
+      this.verificationError = ''
+
+      try {
+        await axios.post(
+          `${import.meta.env.VITE_API_URL}/api/v1/admin/auth/resend-account-verification-code`,
+          { email: this.verificationEmail },
+        )
+        this.$notify.success('Code envoyé', 'Un nouveau code a été envoyé à votre adresse e-mail.')
+      } catch (error) {
+        this.verificationError = this.getAuthErrorMessage(
+          error,
+          'Impossible de renvoyer le code pour le moment. Veuillez réessayer.',
+        )
+      } finally {
+        this.isResending = false
       }
     },
   },
